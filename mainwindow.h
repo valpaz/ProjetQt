@@ -17,12 +17,12 @@ public:
     ~MainWindow();
     QMap<QWidget*, QString> tabName;
     QMap<QWidget*, bool> tabStatue;
-
 private slots:
     void nouveauFichier();
     void closeTab(const int& index);
     void ouvrirFichier();
     void plainTextEditChanged();
+    void sauvegarderFichier();
 
 private:
 
