@@ -19,6 +19,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->tabWidget->removeTab(1);
     QWidget *firstTabContent = ui->tabWidget->widget(0);
     tabName[firstTabContent] = "";
+    tabStatue[newTabContent] = false;
     QPlainTextEdit *FirstTextEdit = new QPlainTextEdit;
     QVBoxLayout *firstLayout = new QVBoxLayout(firstTabContent);
     firstLayout->addWidget(FirstTextEdit);
@@ -31,7 +32,7 @@ MainWindow::MainWindow(QWidget *parent)
     // fermer onglet
     connect(ui->tabWidget, SIGNAL(tabCloseRequested(int)), this, SLOT(closeTab(int)));
     // check si non enregistrer
-    connect(ui->tabWidget, SIGNAL(tabCloseRequested(int)), this, SLOT(closeTab(int)));
+    //connect(ui->tabWidget, SIGNAL(tabCloseRequested(int)), this, SLOT(closeTab(int)));
 }
 
 MainWindow::~MainWindow()
@@ -44,6 +45,7 @@ void MainWindow::nouveauFichier()
     // Ajout nouveau tab
     QWidget *newTabContent = new QWidget;
     tabName[newTabContent] = "";
+    tabStatue[newTabContent] = false;
     ui->tabWidget->addTab(newTabContent, "nouveau fichier");
     QPlainTextEdit *textEdit = new QPlainTextEdit;
     QVBoxLayout *layout = new QVBoxLayout(newTabContent);
@@ -88,6 +90,7 @@ void MainWindow::ouvrirFichier(){
     // Creer un nouvel onglet  et ajoute le contenu de fileContent
     QWidget *newTabContent = new QWidget;
     tabName[newTabContent] = fileName;
+    tabStatue[newTabContent] = true;
     ui->tabWidget->addTab(newTabContent, justFileName);
     QPlainTextEdit *textEdit = new QPlainTextEdit;
     QVBoxLayout *layout = new QVBoxLayout(newTabContent);
