@@ -6,7 +6,10 @@
 #include <QFile>
 #include <QFileDialog>
 #include <QStatusBar>
-
+#include <QShortcut>
+#include <QInputDialog>
+#include <QTextCharFormat>
+#include <QtGui>
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -15,6 +18,10 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
 
     // Initialisation //
+    ui->lineEdit->hide();
+    ui->toolButton->hide();
+    ui->toolButton_2->hide();
+
     setWindowTitle("Editeur de texte");
     ui->tabWidget->setTabsClosable(true);
     ui->tabWidget->removeTab(1);
@@ -36,13 +43,70 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->tabWidget, SIGNAL(tabCloseRequested(int)), this, SLOT(closeTab(int)));
     // Sauvegarder
     connect(ui->actionSauvegarder, SIGNAL(triggered()), this, SLOT(sauvegarderFichier()));
+    // Rechercher
+    connect(ui->actionBarre_de_recherche, SIGNAL(triggered()), this, SLOT(showResearchBare()));
+    QShortcut* shortcut = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_F), this);
+    connect(shortcut, SIGNAL(activated()), this, SLOT(showResearchBare()));
+    connect(ui->toolButton, SIGNAL(clicked()), this, SLOT(hideResearchBare()));
+    connect(ui->toolButton_2, SIGNAL(clicked()), this, SLOT(textSearch()));
+
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
 }
+void MainWindow::hideResearchBare(){
+    ui->lineEdit->hide();
+    ui->toolButton->hide();
+    ui->toolButton_2->hide();
 
+    // disable the highlight text
+    QWidget *currentTabContent = ui->tabWidget->currentWidget();
+    QPlainTextEdit *currentTextEdit = currentTabContent->findChild<QPlainTextEdit*>();
+    QTextCursor cursor = currentTextEdit->textCursor();
+    currentTextEdit->setTextCursor(cursor);
+    cursor.select(QTextCursor::Document);
+    QTextCharFormat format;
+    cursor.setCharFormat(format);
+    cursor.setPosition(0);
+
+}
+void MainWindow::showResearchBare(){
+    ui->lineEdit->show();
+    ui->toolButton->show();
+    ui->toolButton_2->show();
+
+}
+
+void MainWindow::textSearch()
+    {
+        QString searchText = ui->lineEdit->text();
+        QWidget *currentTabContent = ui->tabWidget->currentWidget();
+        QPlainTextEdit *currentTextEdit = currentTabContent->findChild<QPlainTextEdit*>();
+        if (currentTextEdit){
+            QString textToSearch = currentTextEdit->toPlainText();
+
+            // Obtenez la position actuelle du curseur
+            QTextCursor cursor = currentTextEdit->textCursor();
+            QTextCharFormat format;
+            format.setBackground(QBrush(QColor("yellow")));
+            QRegExp regex(searchText);
+            int pos = 0;
+            int index = regex.indexIn(textToSearch, pos);
+            while (index != -1) {
+                cursor.setPosition(index);
+                cursor.movePosition(QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
+                cursor.mergeCharFormat(format);
+
+                // Move to the next match
+                pos = index + regex.matchedLength();
+                index = regex.indexIn(textToSearch, pos);
+
+            }
+
+        }
+    }
 void MainWindow::nouveauFichier()
 {
     // Ajout nouveau tab
@@ -147,7 +211,6 @@ void MainWindow::sauvegarderFichier() {
     else{
         filePath = tabName[currentTab];
     }
-    qDebug() << filePath;
     tabStatue[currentTab]=true;
     QString contentToSave = textEdit->toPlainText();
     QFile file(filePath);
@@ -169,3 +232,5 @@ void MainWindow::sauvegarderFichier() {
     }
 
 }
+
+

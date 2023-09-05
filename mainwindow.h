@@ -24,6 +24,9 @@ private slots:
     void plainTextEditChanged();
     void sauvegarderFichier();
     void cursorPosition();
+    void showResearchBare();
+    void hideResearchBare();
+    void textSearch();
 
 private:
 
