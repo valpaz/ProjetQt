@@ -23,6 +23,7 @@ private slots:
     void ouvrirFichier();
     void plainTextEditChanged();
     void sauvegarderFichier();
+    void cursorPosition();
 
 private:
 

@@ -5,6 +5,7 @@
 #include<QDebug>
 #include <QFile>
 #include <QFileDialog>
+#include <QStatusBar>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -25,6 +26,7 @@ MainWindow::MainWindow(QWidget *parent)
     QVBoxLayout *firstLayout = new QVBoxLayout(firstTabContent);
     firstLayout->addWidget(FirstTextEdit);
     connect(FirstTextEdit, SIGNAL(textChanged()), this, SLOT(plainTextEditChanged()));
+    connect(FirstTextEdit, SIGNAL(textChanged()), this, SLOT(cursorPosition()));
     // Actions //
     // Nouveau Fichier
     connect(ui->actionajout,SIGNAL(triggered()),this,SLOT(nouveauFichier()));
@@ -50,6 +52,7 @@ void MainWindow::nouveauFichier()
     ui->tabWidget->addTab(newTabContent, "nouveau fichier");
     QPlainTextEdit *textEdit = new QPlainTextEdit;
     connect(textEdit, SIGNAL(textChanged()), this, SLOT(plainTextEditChanged()));
+    connect(textEdit, SIGNAL(textChanged()), this, SLOT(cursorPosition()));
     QVBoxLayout *layout = new QVBoxLayout(newTabContent);
     layout->addWidget(textEdit);
 
@@ -97,6 +100,7 @@ void MainWindow::ouvrirFichier(){
     ui->tabWidget->addTab(newTabContent, justFileName);
     QPlainTextEdit *textEdit = new QPlainTextEdit;
     connect(textEdit, SIGNAL(textChanged()), this, SLOT(plainTextEditChanged()));
+    connect(textEdit, SIGNAL(textChanged()), this, SLOT(cursorPosition()));
     QVBoxLayout *layout = new QVBoxLayout(newTabContent);
     layout->addWidget(textEdit);
     textEdit->setPlainText(fileContent);
@@ -115,8 +119,21 @@ void MainWindow::plainTextEditChanged() {
             }
         }
     }
-}
 
+}
+void MainWindow::cursorPosition() {
+    QPlainTextEdit* senderTextEdit = qobject_cast<QPlainTextEdit*>(sender());
+    for (int tabIndex = 0; tabIndex < ui->tabWidget->count(); ++tabIndex) {
+        QWidget* tabContent = ui->tabWidget->widget(tabIndex);
+        QPlainTextEdit* textEdit = tabContent->findChild<QPlainTextEdit*>();
+        if (textEdit == senderTextEdit) {
+            QTextCursor cursor = textEdit->textCursor();
+            int currentLine = cursor.blockNumber() + 1;
+            int currentColumn = cursor.columnNumber() + 1;
+            ui->statusbar->showMessage(QString("Ligne : %1, Colonne : %2").arg(currentLine).arg(currentColumn));
+        }
+    }
+}
 void MainWindow::sauvegarderFichier() {
     QWidget* currentTab = ui->tabWidget->currentWidget();
     QPlainTextEdit* textEdit = currentTab->findChild<QPlainTextEdit*>();
