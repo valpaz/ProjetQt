@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QTableWidget>
+#include<QPlainTextEdit>
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -16,10 +17,12 @@ public:
     ~MainWindow();
     QMap<QWidget*, QString> tabName;
     QMap<QWidget*, bool> tabStatue;
+
 private slots:
     void nouveauFichier();
     void closeTab(const int& index);
     void ouvrirFichier();
+    void plainTextEditChanged();
 
 private:
 

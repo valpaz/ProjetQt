@@ -1,7 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include<QVBoxLayout>
-#include<QPlainTextEdit>
+
 #include<QDebug>
 #include <QFile>
 #include <QFileDialog>
@@ -19,8 +19,9 @@ MainWindow::MainWindow(QWidget *parent)
     ui->tabWidget->removeTab(1);
     QWidget *firstTabContent = ui->tabWidget->widget(0);
     tabName[firstTabContent] = "";
-    tabStatue[newTabContent] = false;
+    tabStatue[firstTabContent] = false;
     QPlainTextEdit *FirstTextEdit = new QPlainTextEdit;
+    connect(FirstTextEdit, SIGNAL(textChanged()), this, SLOT(plainTextEditChanged()));
     QVBoxLayout *firstLayout = new QVBoxLayout(firstTabContent);
     firstLayout->addWidget(FirstTextEdit);
 
@@ -31,8 +32,6 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionouvrirFichier,SIGNAL(triggered()),this,SLOT(ouvrirFichier()));
     // fermer onglet
     connect(ui->tabWidget, SIGNAL(tabCloseRequested(int)), this, SLOT(closeTab(int)));
-    // check si non enregistrer
-    //connect(ui->tabWidget, SIGNAL(tabCloseRequested(int)), this, SLOT(closeTab(int)));
 }
 
 MainWindow::~MainWindow()
@@ -48,6 +47,7 @@ void MainWindow::nouveauFichier()
     tabStatue[newTabContent] = false;
     ui->tabWidget->addTab(newTabContent, "nouveau fichier");
     QPlainTextEdit *textEdit = new QPlainTextEdit;
+    connect(textEdit, SIGNAL(textChanged()), this, SLOT(plainTextEditChanged()));
     QVBoxLayout *layout = new QVBoxLayout(newTabContent);
     layout->addWidget(textEdit);
 
@@ -93,8 +93,24 @@ void MainWindow::ouvrirFichier(){
     tabStatue[newTabContent] = true;
     ui->tabWidget->addTab(newTabContent, justFileName);
     QPlainTextEdit *textEdit = new QPlainTextEdit;
+    connect(textEdit, SIGNAL(textChanged()), this, SLOT(plainTextEditChanged()));
     QVBoxLayout *layout = new QVBoxLayout(newTabContent);
     layout->addWidget(textEdit);
     textEdit->setPlainText(fileContent);
 }
 
+void MainWindow::plainTextEditChanged() {
+    qDebug()<<"tabName";
+    //QPlainTextEdit* senderTextEdit = qobject_cast<QPlainTextEdit*>(sender());
+
+//    qDebug()<<"tabName";
+//    QWidget* parentWidget = textEdit->parentWidget();
+//    QTabWidget* tabWidget = qobject_cast<QTabWidget*>(parentWidget);
+//    int tabIndex = tabWidget->currentIndex();
+//    QString tabName = tabWidget->tabText(tabIndex);
+//    tabName+="*";
+//    qDebug()<<tabName;
+
+
+
+}
