@@ -15,7 +15,7 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
     QMap<QWidget*, QString> tabName;
-    //QMap<QTabWidget*, bool> tabStatue;
+    QMap<QWidget*, bool> tabStatue;
 private slots:
     void nouveauFichier();
     void closeTab(const int& index);
