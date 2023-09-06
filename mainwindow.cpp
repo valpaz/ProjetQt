@@ -230,7 +230,7 @@ void MainWindow::textSearch()
             QTextCursor cursor = currentTextEdit->textCursor();
             QTextCharFormat format;
             format.setBackground(QBrush(QColor("yellow")));
-            QRegExp regex(searchText);
+            QRegExp regex(searchText, Qt::CaseInsensitive);
             int pos = 0;
             int index = regex.indexIn(textToSearch, pos);
             while (index != -1) {
