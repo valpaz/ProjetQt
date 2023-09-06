@@ -1,7 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include<QVBoxLayout>
-
 #include<QDebug>
 #include <QFile>
 #include <QFileDialog>
@@ -10,30 +9,37 @@
 #include <QInputDialog>
 #include <QTextCharFormat>
 #include <QtGui>
+
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
-
     ui->setupUi(this);
+
 
     // Initialisation //
     ui->lineEdit->hide();
     ui->toolButton->hide();
     ui->toolButton_2->hide();
-
+    ui->lineEdit_2->hide();
+    ui->lineEdit_3->hide();
+    ui->toolButton_3->hide();
+    ui->toolButton_4->hide();
     setWindowTitle("Editeur de texte");
     ui->tabWidget->setTabsClosable(true);
     ui->tabWidget->removeTab(1);
     QWidget *firstTabContent = ui->tabWidget->widget(0);
     tabName[firstTabContent] = "";
-    tabStatue[firstTabContent] = false;
+    tabStatue[firstTabContent] = false; // to know of the  file is save or not
     QPlainTextEdit *FirstTextEdit = new QPlainTextEdit;
 
     QVBoxLayout *firstLayout = new QVBoxLayout(firstTabContent);
     firstLayout->addWidget(FirstTextEdit);
     connect(FirstTextEdit, SIGNAL(textChanged()), this, SLOT(plainTextEditChanged()));
     connect(FirstTextEdit, SIGNAL(textChanged()), this, SLOT(cursorPosition()));
+
+
     // Actions //
     // Nouveau Fichier
     connect(ui->actionajout,SIGNAL(triggered()),this,SLOT(nouveauFichier()));
@@ -44,11 +50,14 @@ MainWindow::MainWindow(QWidget *parent)
     // Sauvegarder
     connect(ui->actionSauvegarder, SIGNAL(triggered()), this, SLOT(sauvegarderFichier()));
     // Rechercher
-    connect(ui->actionBarre_de_recherche, SIGNAL(triggered()), this, SLOT(showResearchBare()));
+    connect(ui->actionBarre_de_recherche, SIGNAL(triggered()), this, SLOT(showResearchBar()));
     QShortcut* shortcut = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_F), this);
-    connect(shortcut, SIGNAL(activated()), this, SLOT(showResearchBare()));
-    connect(ui->toolButton, SIGNAL(clicked()), this, SLOT(hideResearchBare()));
+    connect(shortcut, SIGNAL(activated()), this, SLOT(showResearchBar()));
+    connect(ui->toolButton, SIGNAL(clicked()), this, SLOT(hideResearchBar()));
     connect(ui->toolButton_2, SIGNAL(clicked()), this, SLOT(textSearch()));
+    connect(ui->actionBarre_de_remplacement, SIGNAL(triggered()), this, SLOT(showReplaceBar()));
+    connect(ui->toolButton_4, SIGNAL(clicked()), this, SLOT(hideReplaceBar()));
+    connect(ui->toolButton_3, SIGNAL(clicked()), this, SLOT(textReplace()));
 
 }
 
@@ -56,7 +65,7 @@ MainWindow::~MainWindow()
 {
     delete ui;
 }
-void MainWindow::hideResearchBare(){
+void MainWindow::hideResearchBar(){
     ui->lineEdit->hide();
     ui->toolButton->hide();
     ui->toolButton_2->hide();
@@ -72,13 +81,65 @@ void MainWindow::hideResearchBare(){
     cursor.setPosition(0);
 
 }
-void MainWindow::showResearchBare(){
+void MainWindow::hideReplaceBar(){
+    ui->lineEdit_2->hide();
+    ui->lineEdit_3->hide();
+    ui->toolButton_3->hide();
+    ui->toolButton_4->hide();
+
+    // disable the highlight text
+    QWidget *currentTabContent = ui->tabWidget->currentWidget();
+    QPlainTextEdit *currentTextEdit = currentTabContent->findChild<QPlainTextEdit*>();
+    QTextCursor cursor = currentTextEdit->textCursor();
+    currentTextEdit->setTextCursor(cursor);
+    cursor.select(QTextCursor::Document);
+    QTextCharFormat format;
+    cursor.setCharFormat(format);
+    cursor.setPosition(0);
+}
+void MainWindow::showResearchBar(){
     ui->lineEdit->show();
     ui->toolButton->show();
     ui->toolButton_2->show();
+}
+void MainWindow::showReplaceBar(){
+    ui->lineEdit_2->show();
+    ui->lineEdit_3->show();
+    ui->toolButton_3->show();
+    ui->toolButton_4->show();
 
 }
 
+void MainWindow::textReplace()
+    {
+        QString searchText = ui->lineEdit_2->text();
+        QString replaceText = ui->lineEdit_3->text();
+        QWidget *currentTabContent = ui->tabWidget->currentWidget();
+        QPlainTextEdit *currentTextEdit = currentTabContent->findChild<QPlainTextEdit*>();
+        if (currentTextEdit){
+            QString textToSearch = currentTextEdit->toPlainText();
+
+            // Obtenez la position actuelle du curseur
+            QTextCursor cursor = currentTextEdit->textCursor();
+            QTextCharFormat format;
+            format.setBackground(QBrush(QColor("yellow")));
+            QRegExp regex(searchText);
+            int pos = 0;
+            int index = regex.indexIn(textToSearch, pos);
+            while (index != -1) {
+                cursor.setPosition(index);
+                cursor.movePosition(QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
+                cursor.mergeCharFormat(format);
+                cursor.insertText(replaceText);
+
+                // Move to the next match
+                pos = index + regex.matchedLength();
+                index = regex.indexIn(textToSearch, pos);
+
+            }
+
+        }
+    }
 void MainWindow::textSearch()
     {
         QString searchText = ui->lineEdit->text();
@@ -171,6 +232,7 @@ void MainWindow::ouvrirFichier(){
 }
 
 void MainWindow::plainTextEditChanged() {
+    // Add * to the title when the file have been modify //
     QPlainTextEdit* senderTextEdit = qobject_cast<QPlainTextEdit*>(sender());
     for (int tabIndex = 0; tabIndex < ui->tabWidget->count(); ++tabIndex) {
         QWidget* tabContent = ui->tabWidget->widget(tabIndex);
@@ -186,6 +248,7 @@ void MainWindow::plainTextEditChanged() {
 
 }
 void MainWindow::cursorPosition() {
+    //Display cursor position //
     QPlainTextEdit* senderTextEdit = qobject_cast<QPlainTextEdit*>(sender());
     for (int tabIndex = 0; tabIndex < ui->tabWidget->count(); ++tabIndex) {
         QWidget* tabContent = ui->tabWidget->widget(tabIndex);
@@ -199,6 +262,7 @@ void MainWindow::cursorPosition() {
     }
 }
 void MainWindow::sauvegarderFichier() {
+    // Save file //
     QWidget* currentTab = ui->tabWidget->currentWidget();
     QPlainTextEdit* textEdit = currentTab->findChild<QPlainTextEdit*>();
     QString filePath;
