@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QTableWidget>
 #include<QPlainTextEdit>
+#include <QSettings>
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -17,6 +18,12 @@ public:
     ~MainWindow();
     QMap<QWidget*, QString> tabName;
     QMap<QWidget*, bool> tabStatue;
+    void addToRecentFiles(const QString &filePath);
+    QStringList recentFiles;
+    QSettings *settings;
+    QMenu* menuAjout;
+    void chargerFichierRecentNouveauLancement();
+
 private slots:
     void nouveauFichier();
     void closeTab(const int& index);
@@ -30,6 +37,7 @@ private slots:
     void hideReplaceBar();
     void textSearch();
     void textReplace();
+    void actionOuvrir();
 
 private:
 

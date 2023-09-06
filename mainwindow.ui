@@ -149,6 +149,7 @@
     <addaction name="actionajout"/>
     <addaction name="actionouvrirFichier"/>
     <addaction name="actionSauvegarder"/>
+    <addaction name="actionFichiers_r_cents"/>
    </widget>
    <widget class="QMenu" name="menuOutils">
     <property name="title">
@@ -194,6 +195,11 @@
   <action name="actionBarre_de_remplacement">
    <property name="text">
     <string>Barre de remplacement</string>
+   </property>
+  </action>
+  <action name="actionFichiers_r_cents">
+   <property name="text">
+    <string>Fichiers récents</string>
    </property>
   </action>
  </widget>

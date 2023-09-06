@@ -18,7 +18,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
 
 
-    // Initialisation //
+    // Initialization //
     ui->lineEdit->hide();
     ui->toolButton->hide();
     ui->toolButton_2->hide();
@@ -26,12 +26,16 @@ MainWindow::MainWindow(QWidget *parent)
     ui->lineEdit_3->hide();
     ui->toolButton_3->hide();
     ui->toolButton_4->hide();
+    menuAjout = new QMenu("fichier recent");
+    settings = new QSettings("MonApplication", "MonEditeurDeTexte");
+    chargerFichierRecentNouveauLancement();
+
     setWindowTitle("Editeur de texte");
     ui->tabWidget->setTabsClosable(true);
     ui->tabWidget->removeTab(1);
     QWidget *firstTabContent = ui->tabWidget->widget(0);
-    tabName[firstTabContent] = "";
-    tabStatue[firstTabContent] = false; // to know of the  file is save or not
+    tabName[firstTabContent] = ""; // assoocie un tab  a un path
+    tabStatue[firstTabContent] = false; // to know of the file is save or not
     QPlainTextEdit *FirstTextEdit = new QPlainTextEdit;
 
     QVBoxLayout *firstLayout = new QVBoxLayout(firstTabContent);
@@ -55,15 +59,90 @@ MainWindow::MainWindow(QWidget *parent)
     connect(shortcut, SIGNAL(activated()), this, SLOT(showResearchBar()));
     connect(ui->toolButton, SIGNAL(clicked()), this, SLOT(hideResearchBar()));
     connect(ui->toolButton_2, SIGNAL(clicked()), this, SLOT(textSearch()));
+    // Remplacer
     connect(ui->actionBarre_de_remplacement, SIGNAL(triggered()), this, SLOT(showReplaceBar()));
+    QShortcut* shortcut1 = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_H), this);
+    connect(shortcut1, SIGNAL(activated()), this, SLOT(showReplaceBar()));
     connect(ui->toolButton_4, SIGNAL(clicked()), this, SLOT(hideReplaceBar()));
     connect(ui->toolButton_3, SIGNAL(clicked()), this, SLOT(textReplace()));
 
 }
 
-MainWindow::~MainWindow()
-{
-    delete ui;
+void MainWindow::chargerFichierRecentNouveauLancement() {
+    // Charge les fichiers dernierement utilisés
+
+    QStringList recentFiles = settings->allKeys();
+    // Parcours l'objet  settings (QSettings)
+    foreach (const QString &recentFile, recentFiles) {
+        QString filePath = settings->value(recentFile).toString(); // Recup Path
+        QAction* recentFileAction = new QAction(recentFile, this); // Creer objet Action
+        menuAjout->addAction(recentFileAction);
+        ui->actionFichiers_r_cents->setMenu(menuAjout);
+        connect(recentFileAction, SIGNAL(triggered()), this, SLOT(actionOuvrir()));
+    }
+}
+
+
+void MainWindow::addToRecentFiles(const QString &filePath) {
+    if (!recentFiles.contains(filePath)) {
+        if (recentFiles.size() >= 10) {
+
+            QString fileToRemove = recentFiles.first();
+            QFileInfo fileInfo(fileToRemove);
+            QString fileName = fileInfo.fileName();
+
+            settings->remove(fileName);
+            recentFiles.removeAt(0);
+
+            QList<QAction*> actions = menuAjout->actions();
+            foreach (QAction* action, actions) {
+                if (action->text() == fileName) {
+                    menuAjout->removeAction(action);
+                    break;
+                }
+            }
+        }
+        recentFiles.append(filePath);
+
+
+        QFileInfo fileInfo(filePath);
+        QString justFileName = fileInfo.fileName();
+        settings->setValue(justFileName, filePath);
+
+        QAction* recentFileAction = new QAction(justFileName, this);
+        menuAjout->addAction(recentFileAction);
+        int tailleMenu = menuAjout->actions().size();
+
+        qDebug() <<"taille menu" << tailleMenu;
+        ui->actionFichiers_r_cents->setMenu(menuAjout);
+
+        connect(recentFileAction, SIGNAL(triggered()), this, SLOT(actionOuvrir()));
+
+
+    settings->sync();
+    }
+
+}
+void MainWindow::actionOuvrir() {
+    QAction* senderAction = qobject_cast<QAction*>(sender());
+    if (senderAction) {
+        QString nomFichierRecent = senderAction->text();
+        QString filePath = settings->value(nomFichierRecent).toString();
+        if (!filePath.isEmpty()) {
+            QPlainTextEdit* newTextEdit = new QPlainTextEdit(this);
+            ui->tabWidget->addTab(newTextEdit, nomFichierRecent);
+            QFile file(filePath);
+            if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                QTextStream in(&file);
+                QString fileContent = in.readAll();
+                file.close();
+                newTextEdit->setPlainText(fileContent);
+
+            } else {
+                qDebug() << "Échec de l'ouverture du fichier récent : " << filePath;
+            }
+        }
+    }
 }
 void MainWindow::hideResearchBar(){
     ui->lineEdit->hide();
@@ -109,7 +188,6 @@ void MainWindow::showReplaceBar(){
     ui->toolButton_4->show();
 
 }
-
 void MainWindow::textReplace()
     {
         QString searchText = ui->lineEdit_2->text();
@@ -182,7 +260,6 @@ void MainWindow::nouveauFichier()
     layout->addWidget(textEdit);
 
 }
-
 void MainWindow::closeTab(const int& index)
 {
     if (index == -1) {
@@ -195,7 +272,6 @@ void MainWindow::closeTab(const int& index)
     delete(tabItem);
     tabItem = nullptr;
 }
-
 void MainWindow::ouvrirFichier(){
 
     // Ouvre une boite de dialogue pour recuperer un fichier
@@ -215,6 +291,7 @@ void MainWindow::ouvrirFichier(){
     }
 
     // recupere le nom du fichier
+    addToRecentFiles(fileName);
     QFileInfo fileInfo(fileName);
     QString justFileName = fileInfo.fileName();
     // Creer un nouvel onglet  et ajoute le contenu de fileContent
@@ -229,6 +306,7 @@ void MainWindow::ouvrirFichier(){
     QVBoxLayout *layout = new QVBoxLayout(newTabContent);
     layout->addWidget(textEdit);
     textEdit->setPlainText(fileContent);
+
 }
 
 void MainWindow::plainTextEditChanged() {
@@ -275,6 +353,7 @@ void MainWindow::sauvegarderFichier() {
     else{
         filePath = tabName[currentTab];
     }
+    addToRecentFiles(filePath);
     tabStatue[currentTab]=true;
     QString contentToSave = textEdit->toPlainText();
     QFile file(filePath);
@@ -295,6 +374,11 @@ void MainWindow::sauvegarderFichier() {
         qDebug() << "Échec de l'ouverture du fichier pour la sauvegarde.";
     }
 
+}
+
+MainWindow::~MainWindow()
+{
+    delete ui;
 }
 
 
