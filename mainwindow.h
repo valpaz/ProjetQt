@@ -18,18 +18,19 @@ public:
     ~MainWindow();
     QMap<QWidget*, QString> tabName;
     QMap<QWidget*, bool> tabStatue;
+
     void addToRecentFiles(const QString &filePath);
     QStringList recentFiles;
     QSettings *settings;
     QMenu* menuAjout;
-    void chargerFichierRecentNouveauLancement();
+    void recentFileLoading();
 
 private slots:
-    void nouveauFichier();
+    void newFile();
     void closeTab(const int& index);
-    void ouvrirFichier();
+    void openFile();
     void plainTextEditChanged();
-    void sauvegarderFichier();
+    void saveFile();
     void cursorPosition();
     void showResearchBar();
     void hideResearchBar();
@@ -37,7 +38,7 @@ private slots:
     void hideReplaceBar();
     void textSearch();
     void textReplace();
-    void actionOuvrir();
+    void OpenRecentFile();
 
 private:
 
